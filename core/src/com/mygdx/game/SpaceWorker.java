@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -32,10 +33,20 @@ public class SpaceWorker extends ApplicationAdapter {
     SpriteBatch batch;
     Texture dropImage;
     Texture workerImage;
+    //    Texture btn_left;
     Sound dropSound;
     Music rainMusic;
     //    Rectangle bucket;
     Vector3 touchPos;
+    int next_x;
+    int next_y;
+    int after_x;
+    int after_y;
+    int lvl_state;
+    int worker_state;
+    int bx;
+    int by;
+    final int SIDE = 21;
 //    Array<Rectangle> raindrops;
 //    long lastDropTime;
 
@@ -145,48 +156,119 @@ public class SpaceWorker extends ApplicationAdapter {
 
 //    FileHandle file = Gdx.files.external("sokoban_levels_pack.txt");
 
-    final Map<Integer, String[]> STATES = new HashMap<Integer, String[]>() {
-    };
+    final Map<Integer, char[]> STATES = new HashMap<Integer, char[]>() {};
     int curX;
     int curY;
 
     @Override
     public void create() {
-        STATES.put(121, new String[]{"V", "H", "W"});
-        STATES.put(122, new String[]{"V", "H", "V"});
-        STATES.put(123, new String[]{"V", "H", "B"});
-        STATES.put(124, new String[]{"V", "H", "L"});
-        STATES.put(125, new String[]{"V", "H", "X"});
-        STATES.put(132, new String[]{"V", "H", "B"});
-        STATES.put(134, new String[]{"V", "H", "X"});
-        STATES.put(141, new String[]{"V", "P", "W"});
-        STATES.put(142, new String[]{"V", "P", "V"});
-        STATES.put(143, new String[]{"V", "P", "B"});
-        STATES.put(144, new String[]{"V", "P", "L"});
-        STATES.put(145, new String[]{"V", "P", "X"});
-        STATES.put(152, new String[]{"V", "P", "B"});
-        STATES.put(154, new String[]{"V", "P", "X"});
-        STATES.put(221, new String[]{"L", "H", "W"});
-        STATES.put(222, new String[]{"L", "H", " "});
-        STATES.put(223, new String[]{"L", "H", "B"});
-        STATES.put(224, new String[]{"L", "H", "L"});
-        STATES.put(225, new String[]{"L", "H", "X"});
-        STATES.put(232, new String[]{"L", "H", "B"});
-        STATES.put(234, new String[]{"L", "H", "X"});
-        STATES.put(241, new String[]{"L", "P", "W"});
-        STATES.put(242, new String[]{"L", "P", " "});
-        STATES.put(243, new String[]{"L", "P", "B"});
-        STATES.put(244, new String[]{"L", "P", "L"});
-        STATES.put(245, new String[]{"L", "P", "X"});
-        STATES.put(252, new String[]{"L", "P", "B"});
-        STATES.put(254, new String[]{"L", "P", "X"});
+        Gdx.input.setInputProcessor(new SwipeDetector(new SwipeDetector.DirectionListener() {
+            @Override
+            public void onUp() throws InterruptedException {
+                System.out.println("up");
+                pre_position();
+                next_y -= 1;
+                after_y -= 2;
+                worker_state = 3;
+                position();
+                if (STATES.containsKey(lvl_state)) {
+                    if (((lvl_state % 100) / 10 == 3) | ((lvl_state % 100) / 10 == 5)) {
+                        move(worker_state, true);
+                    } else {
+                        move(worker_state, false);
+                    }
+                }
+            }
+
+            @Override
+            public void onRight() throws InterruptedException {
+                System.out.println("right");
+                pre_position();
+                next_x += 1;
+                after_x += 2;
+                worker_state = 1;
+                position();
+                if (STATES.containsKey(lvl_state)) {
+                    if (((lvl_state % 100) / 10 == 3) | ((lvl_state % 100) / 10 == 5)) {
+                        move(worker_state, true);
+                    } else {
+                        move(worker_state, false);
+                    }
+                }
+            }
+
+            @Override
+            public void onLeft() throws InterruptedException {
+                System.out.println("left");
+                pre_position();
+                next_x -= 1;
+                after_x -= 2;
+                worker_state = 2;
+                position();
+                if (STATES.containsKey(lvl_state)) {
+                    if (((lvl_state % 100) / 10 == 3) | ((lvl_state % 100) / 10 == 5)) {
+                        move(worker_state, true);
+                    } else {
+                        move(worker_state, false);
+                    }
+                }
+            }
+
+
+            @Override
+            public void onDown() throws InterruptedException {
+                System.out.println("down");
+                pre_position();
+                next_y += 1;
+                after_y += 2;
+                worker_state = 0;
+                position();
+                if (STATES.containsKey(lvl_state)) {
+                    if (((lvl_state % 100) / 10 == 3) | ((lvl_state % 100) / 10 == 5)) {
+                        move(worker_state, true);
+                    } else {
+                        move(worker_state, false);
+                    }
+                }
+            }
+        }));
+        STATES.put(121, new char[]{'V', 'H', 'W'});
+        STATES.put(122, new char[]{'V', 'H', 'V'});
+        STATES.put(123, new char[]{'V', 'H', 'B'});
+        STATES.put(124, new char[]{'V', 'H', 'L'});
+        STATES.put(125, new char[]{'V', 'H', 'X'});
+        STATES.put(132, new char[]{'V', 'H', 'B'});
+        STATES.put(134, new char[]{'V', 'H', 'X'});
+        STATES.put(141, new char[]{'V', 'P', 'W'});
+        STATES.put(142, new char[]{'V', 'P', 'V'});
+        STATES.put(143, new char[]{'V', 'P', 'B'});
+        STATES.put(144, new char[]{'V', 'P', 'L'});
+        STATES.put(145, new char[]{'V', 'P', 'X'});
+        STATES.put(152, new char[]{'V', 'P', 'B'});
+        STATES.put(154, new char[]{'V', 'P', 'X'});
+        STATES.put(221, new char[]{'L', 'H', 'W'});
+        STATES.put(222, new char[]{'L', 'H', 'V'});
+        STATES.put(223, new char[]{'L', 'H', 'B'});
+        STATES.put(224, new char[]{'L', 'H', 'L'});
+        STATES.put(225, new char[]{'L', 'H', 'X'});
+        STATES.put(232, new char[]{'L', 'H', 'B'});
+        STATES.put(234, new char[]{'L', 'H', 'X'});
+        STATES.put(241, new char[]{'L', 'P', 'W'});
+        STATES.put(242, new char[]{'L', 'P', 'V'});
+        STATES.put(243, new char[]{'L', 'P', 'B'});
+        STATES.put(244, new char[]{'L', 'P', 'L'});
+        STATES.put(245, new char[]{'L', 'P', 'X'});
+        STATES.put(252, new char[]{'L', 'P', 'B'});
+        STATES.put(254, new char[]{'L', 'P', 'X'});
         camera = new OrthographicCamera();
-        camera.setToOrtho(true, 1600, 840);
+        camera.setToOrtho(true, 1040, 840);
 
         batch = new SpriteBatch();
         loadLevel();
 
         touchPos = new Vector3();
+//        btn_left = new Texture("btn_left.png");
+
 
         dropImage = new Texture("droplet.png");
         workerImage = new Texture("Worker.png");
@@ -235,6 +317,113 @@ public class SpaceWorker extends ApplicationAdapter {
 //        lastDropTime = TimeUtils.nanoTime();
 //    }
 
+    public void pre_position() {
+        for (int i = 0; i < SIDE * SIDE; i++) {
+            int cur_y = i / SIDE;
+            int cur_x = i % SIDE;
+            if ((CurrentLvl[cur_y][cur_x] == 'H') | (CurrentLvl[cur_y][cur_x] == 'P')) {
+                System.out.println(cur_y + " " + cur_x);
+                next_y = cur_y;
+                next_x = cur_x;
+                after_y = cur_y;
+                after_x = cur_x;
+                if (CurrentLvl[cur_y][cur_x] == 'H') {
+                    lvl_state = 100;
+                } else {
+                    lvl_state = 200;
+                    break;
+                }
+            }
+        }
+    }
+
+    public void position() {
+        if (CurrentLvl[next_y][next_x] == 'W') {
+            lvl_state += 10;
+        } else if (CurrentLvl[next_y][next_x] == 'V') {
+            lvl_state += 20;
+        } else if (CurrentLvl[next_y][next_x] == 'B') {
+            lvl_state += 30;
+        } else if (CurrentLvl[next_y][next_x] == 'L') {
+            lvl_state += 40;
+        } else if (CurrentLvl[next_y][next_x] == 'X') {
+            lvl_state += 50;
+        }
+
+        if (CurrentLvl[after_y][after_x] == 'W') {
+            lvl_state += 1;
+        } else if (CurrentLvl[after_y][after_x] == 'V') {
+            lvl_state += 2;
+        } else if (CurrentLvl[after_y][after_x] == 'B') {
+            lvl_state += 3;
+        } else if (CurrentLvl[after_y][after_x] == 'L') {
+            lvl_state += 4;
+        } else if (CurrentLvl[after_y][after_x] == 'X') {
+            lvl_state += 5;
+        }
+        System.out.println("look forward=" + lvl_state);
+        System.out.println();
+    }
+
+    public void move(int direction, boolean isBusy) throws InterruptedException {
+        int dx = 0;
+        int dy = 0;
+        if (direction == 0) {
+            dy = 4;
+            by += 40;
+        } else if (direction == 1) {
+            dx = 4;
+            bx += 40;
+        } else if (direction == 2) {
+            dx = -4;
+            bx -= 40;
+        } else if (direction == 3) {
+            dy = -4;
+            by -= 40;
+        }
+//        batch.begin();
+        if (!isBusy) {
+            for (int fr = 1; fr < 11; fr++) {
+                by += dy;
+                bx += dx;
+                int dir_num = fr % 5;
+                batch.begin();
+                batch.draw(frames[direction][dir_num], bx, by);
+                Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+                batch.end();
+                //camera.update();
+                Thread.sleep(100);
+//              batch.setProjectionMatrix(camera.combined);
+
+//            workerImage = frames[direction][dir_num];
+//            self.image = self.frames[direction][dir_num];
+            }
+        } else {
+            int mbx = bx;
+            int mby = by;
+            for (int fr = 1; fr < 11; fr++) {
+                batch.begin();
+                by += dy;
+                bx += dx;
+                mby += dy;
+                mbx += dx;
+                int dir_num = fr % 5;
+                batch.draw(frames[direction][dir_num], bx, by);
+                batch.draw(boxImage, mbx, mby);
+                Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+                camera.update();
+                Thread.sleep(100);
+//                batch.setProjectionMatrix(camera.combined);
+                batch.end();
+            }
+        }
+//        batch.end();
+        CurrentLvl[by / 40][bx / 40] = STATES.get(lvl_state)[0];
+        CurrentLvl[next_y][next_x] = STATES.get(lvl_state)[1];
+        CurrentLvl[after_y][after_x] = STATES.get(lvl_state)[2];
+//        pos[cur_y][cur_x], pos[next_y][next_x], pos[after_y][after_x] = STATES[level_state]
+    }
+
     public void loadLevel() {
 //        String cur = file.readString();
 //        return cur;
@@ -261,27 +450,38 @@ public class SpaceWorker extends ApplicationAdapter {
     public void render() {
         batch.begin();
         shape.begin();
-        Gdx.gl.glClearColor(0, 0, 0, 0);
+        int renderX;
+        int renderY;
+//        Gdx.gl.glClearColor(0, 0, 0, 0);
         for (int j = 0; j < 21; j++) {
             for (int i = 0; i < 21; i++) {
+                renderX = i * CAGE;
+                renderY = j * CAGE;
                 if (CurrentLvl[i][j] == '*') {
-                    batch.draw(grassImage, i * CAGE, j * CAGE);
+                    batch.draw(grassImage, renderX, renderY);
                 } else if (CurrentLvl[i][j] == 'W') {
-                    batch.draw(wallImage, i * CAGE, j * CAGE);
+                    batch.draw(wallImage, renderX, renderY);
                 } else if (CurrentLvl[i][j] == 'L') {
-                    batch.draw(landingImage, i * CAGE, j * CAGE);
+                    batch.draw(landingImage, renderX, renderY);
                 } else if (CurrentLvl[i][j] == 'V') {
-                    batch.draw(emptyImage, i * CAGE, j * CAGE);//shape.rect(i * CAGE, i * CAGE, CAGE, CAGE);
+                    batch.draw(emptyImage, renderX, renderY);//shape.rect(renderX, renderX, CAGE, CAGE);
                 } else if (CurrentLvl[i][j] == 'B') {
-                    batch.draw(boxImage, i * CAGE, j * CAGE);
+                    batch.draw(boxImage, renderX, renderY);
                 } else if (CurrentLvl[i][j] == 'X') {
-                    batch.draw(landingImage, i * CAGE, j * CAGE);
-                    batch.draw(boxImage, i * CAGE, j * CAGE);
-//                    shape.rect(i * CAGE, i * CAGE, CAGE, CAGE);
-                } else if (CurrentLvl[i][j] == 'P') {//shape.rect(i * CAGE, i * CAGE, CAGE, CAGE);
+                    batch.draw(landingImage, renderX, renderY);
+                    batch.draw(boxImage, renderX, renderY);
+//                    shape.rect(renderX, renderX, CAGE, CAGE);
+                } else if (CurrentLvl[i][j] == 'P') {//shape.rect(renderX, renderX, CAGE, CAGE);
+                    batch.draw(landingImage, renderX, renderY);
+                    batch.draw(frames[0][0], renderX, renderY);
+                    bx = i * CAGE;
+                    by = j * CAGE;
                 } else if (CurrentLvl[i][j] == 'H') {
-                    batch.draw(emptyImage, i * CAGE, j * CAGE);
-                    startPos();
+//                    batch.draw(emptyImage, renderX, renderY);
+                    batch.draw(frames[0][0], renderX, renderY);
+                    bx = i * CAGE;
+                    by = j * CAGE;
+//                    startPos();
                 }
             }
         }
