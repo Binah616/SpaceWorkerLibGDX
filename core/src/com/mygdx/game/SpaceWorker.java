@@ -156,7 +156,8 @@ public class SpaceWorker extends ApplicationAdapter {
 
 //    FileHandle file = Gdx.files.external("sokoban_levels_pack.txt");
 
-    final Map<Integer, char[]> STATES = new HashMap<Integer, char[]>() {};
+    final Map<Integer, char[]> STATES = new HashMap<Integer, char[]>() {
+    };
     int curX;
     int curY;
 
@@ -322,7 +323,7 @@ public class SpaceWorker extends ApplicationAdapter {
             int cur_y = i / SIDE;
             int cur_x = i % SIDE;
             if ((CurrentLvl[cur_y][cur_x] == 'H') | (CurrentLvl[cur_y][cur_x] == 'P')) {
-                System.out.println(cur_y + " " + cur_x);
+                System.out.println("Current worker coords: " + cur_y + " " + cur_x);
                 next_y = cur_y;
                 next_x = cur_x;
                 after_y = cur_y;
@@ -383,15 +384,19 @@ public class SpaceWorker extends ApplicationAdapter {
         }
 //        batch.begin();
         if (!isBusy) {
+            CurrentLvl[by / 40][bx / 40] = 'V';
             for (int fr = 1; fr < 11; fr++) {
+                batch.begin();
+                batch.draw(emptyImage, bx, by);
                 by += dy;
                 bx += dx;
                 int dir_num = fr % 5;
-                batch.begin();
+
+
                 batch.draw(frames[direction][dir_num], bx, by);
                 Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
                 batch.end();
-                //camera.update();
+                camera.update();
                 Thread.sleep(100);
 //              batch.setProjectionMatrix(camera.combined);
 
@@ -399,14 +404,17 @@ public class SpaceWorker extends ApplicationAdapter {
 //            self.image = self.frames[direction][dir_num];
             }
         } else {
+            CurrentLvl[by / 40][bx / 40] = 'V';
             int mbx = bx;
             int mby = by;
             for (int fr = 1; fr < 11; fr++) {
                 batch.begin();
+                batch.draw(emptyImage, bx, by);
                 by += dy;
                 bx += dx;
                 mby += dy;
                 mbx += dx;
+                batch.draw(emptyImage, mbx, mby);
                 int dir_num = fr % 5;
                 batch.draw(frames[direction][dir_num], bx, by);
                 batch.draw(boxImage, mbx, mby);
@@ -415,6 +423,7 @@ public class SpaceWorker extends ApplicationAdapter {
                 Thread.sleep(100);
 //                batch.setProjectionMatrix(camera.combined);
                 batch.end();
+                camera.update();
             }
         }
 //        batch.end();
@@ -472,15 +481,18 @@ public class SpaceWorker extends ApplicationAdapter {
                     batch.draw(boxImage, renderX, renderY);
 //                    shape.rect(renderX, renderX, CAGE, CAGE);
                 } else if (CurrentLvl[i][j] == 'P') {//shape.rect(renderX, renderX, CAGE, CAGE);
+                    bx = i * CAGE;
+                    by = j * CAGE;
                     batch.draw(landingImage, renderX, renderY);
-                    batch.draw(frames[0][0], renderX, renderY);
+                    batch.draw(frames[0][0], bx, by);
                     bx = i * CAGE;
                     by = j * CAGE;
                 } else if (CurrentLvl[i][j] == 'H') {
 //                    batch.draw(emptyImage, renderX, renderY);
-                    batch.draw(frames[0][0], renderX, renderY);
                     bx = i * CAGE;
                     by = j * CAGE;
+                    batch.draw(frames[0][0], bx, by);
+
 //                    startPos();
                 }
             }
